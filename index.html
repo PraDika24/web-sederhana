@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="id">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Dashboard Sederhana</title>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap"
+            rel="stylesheet"
+        />
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: "Inter", sans-serif;
+            }
+
+            body {
+                background: #f5f6fa;
+                color: #2d3436;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            header {
+                background: #2563eb;
+                color: white;
+                padding: 16px 24px;
+                font-size: 1.4rem;
+                font-weight: 600;
+            }
+
+            main {
+                flex: 1;
+                padding: 20px;
+                max-width: 1000px;
+                margin: 0 auto;
+            }
+
+            .cards {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+
+            .card {
+                background: white;
+                border-radius: 10px;
+                padding: 20px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                text-align: center;
+            }
+
+            .card h3 {
+                color: #2563eb;
+                font-size: 1rem;
+                margin-bottom: 6px;
+            }
+
+            .card p {
+                font-size: 1.4rem;
+                font-weight: 600;
+            }
+
+            section {
+                background: white;
+                border-radius: 10px;
+                padding: 20px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+                margin-bottom: 30px;
+            }
+
+            canvas {
+                width: 100%;
+                height: 300px;
+            }
+
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 10px;
+            }
+
+            th,
+            td {
+                padding: 10px;
+                border-bottom: 1px solid #e2e8f0;
+                text-align: left;
+            }
+
+            th {
+                background: #f1f5f9;
+            }
+
+            tr:hover {
+                background: #f9fafb;
+            }
+
+            footer {
+                text-align: center;
+                padding: 14px;
+                color: #6b7280;
+                font-size: 0.9rem;
+                background: #f3f4f6;
+            }
+
+            button {
+                padding: 8px 14px;
+                background: #2563eb;
+                border: none;
+                color: white;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: 600;
+            }
+
+            button:hover {
+                background: #1d4ed8;
+            }
+        </style>
+    </head>
+    <body>
+        <header>📊 Dashboard</header>
+
+        <main>
+            <div class="cards">
+                <div class="card">
+                    <h3>Pengguna Aktif</h3>
+                    <p id="userCount">--</p>
+                </div>
+                <div class="card">
+                    <h3>Penjualan Hari Ini</h3>
+                    <p id="salesCount">--</p>
+                </div>
+                <div class="card">
+                    <h3>Pengunjung</h3>
+                    <p id="visitorCount">--</p>
+                </div>
+                <div class="card">
+                    <h3>Pendapatan</h3>
+                    <p id="revenue">--</p>
+                </div>
+            </div>
+
+            <section>
+                <div
+                    style="
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                    "
+                >
+                    <h2>Grafik Penjualan</h2>
+                    <button id="refreshBtn">Refresh</button>
+                </div>
+                <canvas id="salesChart"></canvas>
+            </section>
+
+            <section>
+                <h2>Daftar Transaksi</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Tanggal</th>
+                            <th>Nama</th>
+                            <th>Jumlah</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </section>
+        </main>
+
+        <footer>&copy; <span id="year"></span> prmx</footer>
+
+        <script>
+            const userCount = document.getElementById("userCount");
+            const salesCount = document.getElementById("salesCount");
+            const visitorCount = document.getElementById("visitorCount");
+            const revenue = document.getElementById("revenue");
+            const year = document.getElementById("year");
+            const tbody = document.getElementById("tableBody");
+            year.textContent = new Date().getFullYear();
+
+            function random(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            function updateCards() {
+                userCount.textContent = random(50, 500);
+                salesCount.textContent = random(10, 100);
+                visitorCount.textContent = random(100, 2000);
+                revenue.textContent =
+                    "Rp " + (random(5, 50) * 10000).toLocaleString();
+            }
+
+            // Generate random transactions
+            function updateTable() {
+                tbody.innerHTML = "";
+                for (let i = 1; i <= 5; i++) {
+                    const tr = document.createElement("tr");
+                    tr.innerHTML = `
+          <td>#TX${1000 + i}</td>
+          <td>${new Date().toLocaleDateString()}</td>
+          <td>Customer ${i}</td>
+          <td>Rp ${(random(50, 500) * 1000).toLocaleString()}</td>
+        `;
+                    tbody.appendChild(tr);
+                }
+            }
+
+            // Chart.js setup
+            const ctx = document.getElementById("salesChart");
+            const chart = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"],
+                    datasets: [
+                        {
+                            label: "Penjualan",
+                            backgroundColor: "#2563eb",
+                            data: [12, 19, 8, 15, 25, 30, 10],
+                        },
+                    ],
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                        },
+                    },
+                },
+            });
+
+            function updateChart() {
+                chart.data.datasets[0].data = Array.from({ length: 7 }, () =>
+                    random(5, 35),
+                );
+                chart.update();
+            }
+
+            document
+                .getElementById("refreshBtn")
+                .addEventListener("click", () => {
+                    updateCards();
+                    updateTable();
+                    updateChart();
+                });
+
+            // init
+            updateCards();
+            updateTable();
+        </script>
+    </body>
+</html>
